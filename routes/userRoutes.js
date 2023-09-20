@@ -23,6 +23,7 @@ router.get(
 router.post(
   "/uploadImage",
   authenticate,
+  authorizedPermission("admin"),
   multerUpload("uploads/images").single("image"),
   uploadImage
 );
@@ -30,6 +31,8 @@ router.post(
 router.post(
   "/uploadVideo",
   authenticate,
+  authenticate,
+  authorizedPermission("admin"),
   multerUpload("uploads/video").single("video"),
   uploadVideo
 );

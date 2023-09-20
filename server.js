@@ -3,7 +3,8 @@ require("express-async-errors");
 
 const express = require("express");
 const app = express();
-const path = require("path");
+// const path = require("path");
+const bodyParser = require("body-parser");
 
 // const fileUpload = require("express-fileupload");
 // const cloudinary = require("cloudinary").v2;
@@ -33,15 +34,15 @@ const origin = process.env.ORIGIN;
 app.use(cors({ origin, credentials: true }));
 
 app.use(express.json());
-// app.use(cookieParser(process.env.JWT_SECRET));
-// app.use(fileUpload({ useTempFiles: true }));
-app.use("/uploads", express.static("uploads"));
+app.use(bodyParser.json({ limit: "10gb" }));
+app.use(bodyParser.urlencoded({ limit: "10gb", extended: true }));
+app.use("/api/uploads", express.static("uploads"));
 
-app.use("/auth", authRouter);
-app.use("/user", userRouter);
-app.use("/media", mediaRouter);
-app.post("/stripe", authenticate, stripeController);
-app.use("/bundle", bundleRouter);
+app.use("/api/auth", authRouter);
+app.use("/api/user", userRouter);
+app.use("/api/media", mediaRouter);
+app.post("/api/stripe", authenticate, stripeController);
+app.use("/api/bundle", bundleRouter);
 
 app.use(notFoundMiddleware);
 app.use(errorHandlerMiddleware);
