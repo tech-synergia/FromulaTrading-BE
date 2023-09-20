@@ -31,7 +31,6 @@ router.post(
 router.post(
   "/uploadVideo",
   authenticate,
-  authenticate,
   authorizedPermission("admin"),
   multerUpload("uploads/video").single("video"),
   uploadVideo
