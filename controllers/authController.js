@@ -105,6 +105,7 @@ const accessTokenVerify = async (req, res) => {
         userId: data.accessToken.userId,
         name: data.accessToken.name,
         role: data.accessToken.role,
+        email: data.accessToken.email,
       },
     });
   });
