@@ -29,7 +29,7 @@ const notFoundMiddleware = require("./middleware/notFound");
 const errorHandlerMiddleware = require("./middleware/errorHandler");
 const { authenticate } = require("./middleware/authentication");
 
-const origin = process.env.ORIGIN;
+const origin = [process.env.ORIGIN1, process.env.ORIGIN2];
 
 app.use(cors({ origin, credentials: true }));
 

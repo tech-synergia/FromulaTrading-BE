@@ -1,7 +1,13 @@
 const { BadRequestError, UnauthroizedError } = require("../errors");
 const { StatusCodes } = require("http-status-codes");
-const { createUserToken, attachCookiesToResponse } = require("../utils");
+const {
+  createUserToken,
+  attachCookiesToResponse,
+  createHash,
+  sendResetPassEmail,
+} = require("../utils");
 const jwt = require("jsonwebtoken");
+const crypto = require("crypto");
 
 const userModel = require("../models/user");
 const tokenModel = require("../models/token");
@@ -111,4 +117,67 @@ const accessTokenVerify = async (req, res) => {
   });
 };
 
-module.exports = { register, login, logout, accessTokenVerify, existingUser };
+const forgotPassword = async (req, res) => {
+  const { email } = req.body;
+  if (!email) throw new BadRequestError("Please provide valid email");
+
+  const user = await userModel.findOne({ email });
+
+  if (!user) {
+    throw new BadRequestError(`No user found with email ${email}`);
+  }
+  const passwordToken = crypto.randomBytes(70).toString("hex");
+
+  // Send Email
+  const origin = process.env.ORIGIN;
+  await sendResetPassEmail({
+    name: user.name,
+    email: user.email,
+    token: passwordToken,
+    origin,
+  });
+
+  const tenMinutes = 1000 * 60 * 10;
+  const passTokenExpDate = new Date(Date.now() + tenMinutes);
+
+  user.passwordToken = createHash(passwordToken);
+  user.passTokenExpDate = passTokenExpDate;
+  await user.save();
+
+  res.status(StatusCodes.OK).json({
+    msg: "Please check your email for rest password link!",
+  });
+};
+
+const resetPassword = async (req, res) => {
+  const { token, email, password } = req.body;
+  if (!token || !email || !password)
+    throw new BadRequestError("Please provide all values");
+
+  const user = await userModel.findOne({ email });
+
+  if (user) {
+    const currentDate = new Date();
+
+    if (
+      user.passwordToken === createHash(token) &&
+      user.passTokenExpDate > currentDate
+    ) {
+      user.password = password;
+      user.passwordToken = null;
+      user.passTokenExpDate = null;
+      await user.save();
+    }
+  }
+  res.send("Password Updated!");
+};
+
+module.exports = {
+  register,
+  login,
+  logout,
+  accessTokenVerify,
+  existingUser,
+  forgotPassword,
+  resetPassword,
+};
